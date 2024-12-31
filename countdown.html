@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2024 跨年倒计时</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #d32f2f, #fbc02d);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .countdown {
+            text-align: center;
+            z-index: 1;
+        }
+        .countdown h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: glow 1.5s infinite alternate;
+        }
+        .countdown div {
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: bounce 1s infinite;
+        }
+        .celebrate {
+            display: none;
+            font-size: 5rem;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: zoom 1s infinite alternate;
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ffeb3b, 0 0 40px #ffeb3b; }
+            100% { text-shadow: 0 0 20px #fff, 0 0 30px #ffeb3b, 0 0 40px #ffeb3b, 0 0 50px #ffeb3b; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes zoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+    <div class="countdown">
+        <h1>距离 2025 年还有</h1>
+        <div id="timer">00:00:00</div>
+    </div>
+    <div class="celebrate" id="celebrate">新年快乐！🎉</div>
+    <audio id="bg-music" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" loop></audio>
+
+    <script>
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const countdownDate = new Date('January 1, 2025 00:00:00').getTime();
+        const timerElement = document.getElementById('timer');
+        const celebrateElement = document.getElementById('celebrate');
+        const bgMusic = document.getElementById('bg-music');
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = countdownDate - now;
+
+            if (distance <= 0) {
+                timerElement.style.display = 'none';
+                celebrateElement.style.display = 'block';
+                createConfetti();
+                bgMusic.play();
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerElement.innerHTML = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            requestAnimationFrame(updateCountdown);
+        }
+
+        function createConfetti() {
+            const confettiPieces = [];
+            const confettiColors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+
+            class Confetti {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height - canvas.height;
+                    this.color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                    this.size = Math.random() * 10 + 5;
+                    this.speed = Math.random() * 5 + 2;
+                    this.angle = Math.random() * 360;
+                    this.shape = Math.random() > 0.5 ? 'circle' : 'square';
+                }
+
+                update() {
+                    this.y += this.speed;
+                    this.angle += 5;
+                    if (this.y > canvas.height) {
+                        this.y = -this.size;
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.angle * Math.PI / 180);
+                    ctx.fillStyle = this.color;
+                    if (this.shape === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                    }
+                    ctx.restore();
+                }
+            }
+
+            for (let i = 0; i < 200; i++) {
+                confettiPieces.push(new Confetti());
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confettiPieces.forEach(confetti => {
+                    confetti.update();
+                    confetti.draw();
+                });
+                requestAnimationFrame(animateConfetti);
+            }
+
+            animateConfetti();
+        }
+
+        updateCountdown();
+    </script>
+</body>
+</html>
